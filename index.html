@@ -1,0 +1,36 @@
+<html>
+<head>
+    <title>Integer Sum Calculator</title>
+</head>
+<body>
+    <h1>Integer Sum Calculator</h1>
+    <form action="/calculate" method="post">
+        <label for="num1">Enter the first integer:</label>
+        <input type="text" id="num1" name="num1" required><br><br>
+
+        <label for="num2">Enter the second integer:</label>
+        <input type="text" id="num2" name="num2" required><br><br>
+
+        <input type="submit" value="Calculate Sum">
+    </form>
+    <br>
+
+    <label for="result">Result:</label>
+    <input type="text" id="result" name="result" readonly>
+    <br>
+    <span id="error" style="color: red;"></span>
+</body>
+<script>
+    document.querySelector('form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const num1 = parseInt(document.getElementById('num1').value);
+        const num2 = parseInt(document.getElementById('num2').value);
+        if (!isNaN(num1) && !isNaN(num2)) {
+            document.getElementById('result').value = num1 + num2;
+            document.getElementById('error').textContent = '';
+        } else {
+            document.getElementById('error').textContent = 'Error: Both inputs must be valid integers.';
+        }
+    });
+</script>
+</html>
