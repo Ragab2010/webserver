@@ -35,19 +35,51 @@ std::string generate_html() {
 
 // Function to handle client requests
 void handle_client(int client_socket) {
-    char buffer[1024] = {0};
+    char buffer[4096] = {0};  // Increased buffer size for better handling of HTTP headers.
     int bytes_received = recv(client_socket, buffer, sizeof(buffer), 0);
 
     if (bytes_received < 0) {
         std::cerr << "Error reading from socket" << std::endl;
     } else {
-        std::string html_content = generate_html();
-        std::string response = "HTTP/1.1 200 OK\r\n";
-        response += "Content-Length: " + std::to_string(html_content.length()) + "\r\n";
-        response += "Content-Type: text/html\r\n\r\n";
-        response += html_content;
+        std::string request(buffer);
 
-        send(client_socket, response.c_str(), response.length(), 0);
+        if (request.find("GET / ") != std::string::npos) {
+            std::string html_response = "HTTP/1.1 200 OK\r\n";
+            html_response += "Content-Type: text/html\r\n\r\n";
+            html_response += generate_html();
+            send(client_socket, html_response.c_str(), html_response.length(), 0);
+        } else if (request.find("POST /calculate") != std::string::npos) {
+            std::string html_response = "HTTP/1.1 200 OK\r\n";
+            html_response += "Content-Type: text/plain\r\n\r\n";
+
+            size_t pos = request.find("num1=");
+            if (pos != std::string::npos) {
+                std::string num1_str = request.substr(pos + 5);
+                pos = num1_str.find("&");
+                if (pos != std::string::npos) {
+                    num1_str = num1_str.substr(0, pos);
+                }
+
+                pos = request.find("num2=");
+                if (pos != std::string::npos) {
+                    std::string num2_str = request.substr(pos + 5);
+                    int num1, num2;
+
+                    try {
+                        num1 = std::stoi(num1_str);
+                        num2 = std::stoi(num2_str);
+
+                        int sum = num1 + num2;
+
+                        html_response += std::to_string(sum);
+                    } catch (const std::invalid_argument&) {
+                        html_response += "Invalid input: Both num1 and num2 must be valid integers.";
+                    }
+                }
+            }
+
+            send(client_socket, html_response.c_str(), html_response.length(), 0);
+        }
     }
 
     close(client_socket);
